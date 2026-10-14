@@ -1,0 +1,32 @@
+{
+  "name": "redline",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "playwright": "^1.62.1",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.1.0"
+  },
+  "license": "MIT",
+  "description": "Structured design review for architecture plans — five-field notes pinned on the drawings",
+  "homepage": "https://rrickson.github.io/redline/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rRickson/redline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rRickson/redline/issues"
+  }
+}
