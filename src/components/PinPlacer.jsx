@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useI18n } from '../i18n/index.js'
 
 // Full-screen modal: pan/zoom over a sheet, click to drop the note's pin.
 // `note` may be a draft (unsaved) — the caller decides what to do with the result.
@@ -11,6 +12,7 @@ export default function PinPlacer({
   onDone, // (pin|null) => void  — null means "remove pin"
   onCancel,
 }) {
+  const { t } = useI18n()
   const browse = noteNum == null
   const [sheetId, setSheetId] = useState(
     initial?.sheetId || sheets[0]?.id || null,
@@ -113,27 +115,21 @@ export default function PinPlacer({
 
   return (
     <div className="modal-scrim" onClick={e => e.target === e.currentTarget && onCancel()}>
-      <div className="placer" role="dialog" aria-label="Marcar ponto na planta">
+      <div className="placer" role="dialog" aria-label={t('editor.pinAttach')}>
         <div className="placer-head">
           <span className="placer-title">
-            {browse ? (
-              sheet?.name || 'Planta'
-            ) : (
-              <>
-                Marcar a nota <span className="num">{noteNum}</span> na planta
-              </>
-            )}
+            {browse
+              ? sheet?.name || t('placer.sheet')
+              : t('placer.title', { num: <span className="num">{noteNum}</span> })}
           </span>
           <span className="placer-hint">
-            {browse
-              ? 'Arraste para mover · role para dar zoom'
-              : 'Clique para marcar · arraste para mover · role para dar zoom'}
+            {t(browse ? 'placer.hintBrowse' : 'placer.hintPlace')}
           </span>
           <button className="mini" onClick={e => zoomAt(centerX(), centerY(), 1.4)}>
-            Zoom +
+            {t('placer.zoomIn')}
           </button>
           <button className="mini" onClick={e => zoomAt(centerX(), centerY(), 1 / 1.4)}>
-            Zoom −
+            {t('placer.zoomOut')}
           </button>
         </div>
 
@@ -184,24 +180,24 @@ export default function PinPlacer({
           <span className="spacer" />
           {browse ? (
             <button className="btn-dark" onClick={onCancel}>
-              Fechar
+              {t('placer.close')}
             </button>
           ) : (
             <>
               {initial?.x != null && (
                 <button className="btn-ghost" onClick={() => onDone(null)}>
-                  Remover marcação
+                  {t('placer.removePin')}
                 </button>
               )}
               <button className="btn-ghost" onClick={onCancel}>
-                Cancelar
+                {t('placer.cancel')}
               </button>
               <button
                 className="btn-dark"
                 disabled={!pin}
                 onClick={() => pin && onDone(pin)}
               >
-                Usar este ponto
+                {t('placer.use')}
               </button>
             </>
           )}

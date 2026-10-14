@@ -1,16 +1,11 @@
-export const LAYERS = [
-  { n: 1, t: 'Estrutura & circulação', lock: 'Trava quando a demolição começa' },
-  { n: 2, t: 'Pontos hidráulicos', lock: 'Trava na execução da hidráulica' },
-  { n: 3, t: 'Armários & marcenaria', lock: 'Trava quando a marcenaria é encomendada' },
-  { n: 4, t: 'Elétrica & iluminação', lock: 'Trava na execução da elétrica' },
-  { n: 5, t: 'Acabamentos & metais', lock: 'Trava quando os materiais são comprados' },
-  { n: 6, t: 'Layout dos móveis', lock: 'Flexível até a mudança' },
-]
+// Review layers, ordered by cost of change. Titles and lock notes live in the
+// locale files (layers.<n>.title / layers.<n>.lock).
+export const LAYERS = [1, 2, 3, 4, 5, 6]
 
-export const FIRM = { must: 'Obrigatório', prefer: 'Prefiro', question: 'Pergunta' }
-export const STAT = { open: 'Aberta', agreed: 'Combinada', deferred: 'Adiada', rejected: 'Recusada' }
+export const FIRMS = ['must', 'prefer', 'question']
 
-export const EMPTY_DOC = { project: 'Meu apartamento', seq: {}, items: [], sheets: [] }
+// The project name is filled in from the active locale on first load.
+export const EMPTY_DOC = { project: '', seq: {}, items: [], sheets: [] }
 
 export const today = () => new Date().toISOString().slice(0, 10)
 

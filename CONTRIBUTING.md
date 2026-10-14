@@ -42,8 +42,7 @@ Open an issue before writing code. Describe the *need* (in the tool's own
 spirit: what you see, what you want, and **why**), not just the solution.
 Good first contributions:
 
-- **i18n** — the UI is pt-BR; a small string layer with an English locale is
-  the most-wanted contribution
+- **A new language** — see [Adding a language](#adding-a-language)
 - Accessibility improvements (keyboard flows in the pin placer, screen-reader
   labels)
 - Import/export interop (e.g. CSV/spreadsheet export of the note list)
@@ -56,6 +55,7 @@ bun run dev                     # hot-reloading dev server
 bun run build                   # single-file production build (dist/index.html)
 bun run preview                 # serves the built app on :4573
 bun scripts/capture.mjs        # (preview running) desktop/mobile/print screenshots
+bun scripts/capture.mjs out ja  # …in a given language
 ```
 
 `?printdebug` on the app URL exposes `window.__printHtml()` for inspecting
@@ -82,12 +82,33 @@ The rules most often broken by well-meaning PRs:
 New colors, radii, or type sizes must be added to DESIGN.md's frontmatter in
 the same PR — an automated detector compares the CSS against it.
 
-## Copy rules (pt-BR)
+## Copy rules
 
-- Informal but precise `você`-register Brazilian Portuguese
-- Statuses agree with *a nota* (feminine): Aberta, Combinada, Adiada, Recusada
-- Buttons name actions (Combinar, Adiar, Recusar); tags name states
-- Dates stay ISO (`2026-09-08`) — they are figures, set in mono
+- Every UI string lives in `src/i18n/locales/` — never hardcode text in
+  components or in the print document. Add new keys to **all** locales.
+- Buttons name actions (Agree, Defer, Reject); tags name states (Agreed,
+  Deferred, Rejected)
+- Dates stay ISO (`2026-09-08`) in every language — they are figures, set in
+  mono
+- **pt-BR**: informal but precise `você` register; statuses agree with
+  *a nota* (feminine): Aberta, Combinada, Adiada, Recusada
+- **zh-CN**: a note is 意见, counted with 条
+- **ja**: a note is コメント, counted with 件; polite です・ます for messages
+
+## Adding a language
+
+1. Copy `src/i18n/locales/en.js` to `src/i18n/locales/<code>.js` (a BCP 47
+   tag such as `de` or `es-MX`) and translate every value. Values are
+   strings with `{placeholders}`, or functions of the params where the
+   language needs plurals — see how `en.js` and `pt-BR.js` handle counts.
+2. Register it in `LOCALES` in `src/i18n/index.js`, and add its prefix to
+   `detectLang()` so browsers in that language pick it automatically.
+3. Non-Latin scripts: Inter has no glyphs for them, so add a `:lang()`
+   font stack with the script's native system fonts in `src/styles.css` and
+   in the print CSS in `src/print.js` (copy the `zh` / `ja` rules). Don't
+   embed fonts for it — the single-file build has to stay small.
+4. Check the title block, the editor, the pin placer, and the printed
+   package in your language, and include screenshots in the PR.
 
 ## Pull request checklist
 
@@ -102,8 +123,8 @@ the same PR — an automated detector compares the CSS against it.
       the doc shape — add migration on import, never a breaking change)
 - [ ] No new runtime dependencies without prior discussion in an issue
       (bundle size matters: the whole app ships as one file)
-- [ ] UI strings in pt-BR following the copy rules; `DESIGN.md` updated if
-      you added any design token
+- [ ] UI strings added to every locale, following the copy rules;
+      `DESIGN.md` updated if you added any design token
 
 Commit messages: short imperative summary line ("Add English locale",
 "Fix pin drift on zoomed sheets"). No strict convention beyond that.

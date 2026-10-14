@@ -2,7 +2,7 @@
 // receives: the Print button builds a standalone document in a hidden iframe,
 // with sheet images embedded as data URLs, and prints only after every image
 // has finished loading — object URLs + @media print proved unreliable.
-import { LAYERS, FIRM, STAT, today } from './model.js'
+import { LAYERS, today } from './model.js'
 import { blobToDataUrl } from './sheets.js'
 import { FONT_CSS } from './fonts.js'
 
@@ -17,6 +17,8 @@ body{
   margin:0;color:#111;background:#fff;
   font:10.5pt/1.5 'Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
 }
+html:lang(zh) body{font-family:'Inter','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC','Noto Sans CJK SC',sans-serif}
+html:lang(ja) body{font-family:'Inter','Hiragino Sans','Hiragino Kaku Gothic ProN','Yu Gothic','Meiryo','Noto Sans JP','Noto Sans CJK JP',sans-serif}
 .mono{font-family:'Fragment Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
 header{display:flex;align-items:flex-end;gap:12pt;border-bottom:2pt solid #111;padding-bottom:8pt}
 h1{font-size:19pt;font-weight:700;letter-spacing:-.02em;margin:0;flex:1 1 auto}
@@ -70,40 +72,40 @@ dl{margin:2.5pt 0 0}
 .ps-pin.s-rejected{border-color:#999;color:#999}
 `
 
-function noteHtml(i) {
+function noteHtml(i, t) {
   return `<div class="note s-${i.status}">
     <div class="bubble mono">${esc(i.num)}</div>
     <div class="n-main">
       <div class="n-top">
-        <span class="n-where">${esc(i.where) || 'Local não definido'}</span>
-        <span class="tag ${i.firm}">${FIRM[i.firm]}</span>
-        <span class="tag st-${i.status}">${STAT[i.status]}${
+        <span class="n-where">${esc(i.where) || esc(t('note.noPlace'))}</span>
+        <span class="tag ${i.firm}">${esc(t('firm.' + i.firm))}</span>
+        <span class="tag st-${i.status}">${esc(t('status.' + i.status))}${
           i.status !== 'open' && i.statusDate ? ' ' + esc(i.statusDate) : ''
         }</span>
       </div>
       <dl>
-        ${i.see ? `<div class="line"><dt>Vejo</dt><dd>${esc(i.see)}</dd></div>` : ''}
-        ${i.want ? `<div class="line"><dt>Quero</dt><dd>${esc(i.want)}</dd></div>` : ''}
-        ${i.why ? `<div class="line why"><dt>Porque</dt><dd>${esc(i.why)}</dd></div>` : ''}
-        ${i.ref ? `<div class="line"><dt>Ref</dt><dd>${esc(i.ref)}</dd></div>` : ''}
+        ${i.see ? `<div class="line"><dt>${esc(t('note.see'))}</dt><dd>${esc(i.see)}</dd></div>` : ''}
+        ${i.want ? `<div class="line"><dt>${esc(t('note.want'))}</dt><dd>${esc(i.want)}</dd></div>` : ''}
+        ${i.why ? `<div class="line why"><dt>${esc(t('note.why'))}</dt><dd>${esc(i.why)}</dd></div>` : ''}
+        ${i.ref ? `<div class="line"><dt>${esc(t('note.ref'))}</dt><dd>${esc(i.ref)}</dd></div>` : ''}
       </dl>
-      <div class="n-date mono">Criada em ${esc(i.created)}</div>
+      <div class="n-date mono">${esc(t('note.createdOn', { date: i.created }))}</div>
     </div>
   </div>`
 }
 
-export function buildPrintHtml(db, sheetDataUrls) {
+export function buildPrintHtml(db, sheetDataUrls, t, lang) {
   const open = db.items.filter(i => i.status === 'open').length
-  const layers = LAYERS.map(L => {
-    const its = db.items.filter(i => i.layer === L.n)
+  const layers = LAYERS.map(n => {
+    const its = db.items.filter(i => i.layer === n)
     if (!its.length) return ''
     return `<section class="layer">
       <div class="layer-head">
-        <span class="layer-num mono">${L.n}</span>
-        <h2 class="layer-title">${esc(L.t)}</h2>
-        <span class="layer-lock">${esc(L.lock)}</span>
+        <span class="layer-num mono">${n}</span>
+        <h2 class="layer-title">${esc(t(`layers.${n}.title`))}</h2>
+        <span class="layer-lock">${esc(t(`layers.${n}.lock`))}</span>
       </div>
-      ${its.map(noteHtml).join('')}
+      ${its.map(i => noteHtml(i, t)).join('')}
     </section>`
   }).join('')
 
@@ -114,7 +116,7 @@ export function buildPrintHtml(db, sheetDataUrls) {
       ({ s, pins }) => `<section class="sheet">
       <div class="sheet-head">
         <h2 class="sheet-name">${esc(s.name)}</h2>
-        <span class="sheet-sub">${pins.length} nota${pins.length > 1 ? 's' : ''} — os números correspondem à lista</span>
+        <span class="sheet-sub">${esc(t('print.sheetSub', { n: pins.length }))}</span>
       </div>
       <div class="stage">
         <img src="${sheetDataUrls[s.id]}" alt="${esc(s.name)}">
@@ -129,28 +131,29 @@ export function buildPrintHtml(db, sheetDataUrls) {
     )
     .join('')
 
-  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
-<title>${esc(db.project)} — notas de revisão</title><style>${CSS}</style></head><body>
+  const bold = s => '<b>' + esc(s) + '</b>'
+  return `<!DOCTYPE html><html lang="${esc(lang)}"><head><meta charset="utf-8">
+<title>${esc(t('print.docTitle', { project: db.project }))}</title><style>${CSS}</style></head><body>
 <header>
   <h1>${esc(db.project)}</h1>
-  <div class="doc-meta mono">Notas de revisão para o arquiteto<br>${today()} · ${db.items.length} nota${db.items.length === 1 ? '' : 's'} · ${open} em aberto</div>
+  <div class="doc-meta mono">${esc(t('title.subtitle'))}<br>${today()} · ${esc(t('title.noteCount', { n: db.items.length }))} · ${esc(t('print.openCount', { n: open }))}</div>
 </header>
 <div class="legend">
-  <span>Cada nota: o que eu vejo · o que eu quero · <b>por quê</b></span>
-  <span>A numeração é permanente e corresponde às marcações nas plantas</span>
+  <span>${t('print.legend', { b: bold })}</span>
+  <span>${esc(t('print.legendNumbers'))}</span>
 </div>
 ${layers}
 ${sheets}
 </body></html>`
 }
 
-export async function printRedline(db, getBlob) {
+export async function printRedline(db, getBlob, t, lang) {
   const sheetDataUrls = {}
   for (const s of db.sheets) {
     const blob = await getBlob(s.id)
     if (blob) sheetDataUrls[s.id] = await blobToDataUrl(blob)
   }
-  const html = buildPrintHtml(db, sheetDataUrls)
+  const html = buildPrintHtml(db, sheetDataUrls, t, lang)
 
   const frame = document.createElement('iframe')
   frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'

@@ -1,12 +1,14 @@
 // Captures review screenshots (desktop, mobile, print document) against the
 // preview server, seeding demo data into a fresh browser profile first.
-// Usage: bun scripts/capture.mjs [outDir]   (default .impeccable/review)
+// Usage: bun scripts/capture.mjs [outDir] [locale]
+//   outDir defaults to .impeccable/review; locale (e.g. ja, zh-CN, pt-BR) to en-US
 import { chromium } from 'playwright'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const BASE = 'http://localhost:4573'
 const out = resolve(process.argv[2] || '.impeccable/review')
+const locale = process.argv[3] || 'en-US'
 mkdirSync(out, { recursive: true })
 
 const seed = async page => {
@@ -54,11 +56,11 @@ const seed = async page => {
     await put('blobs', 's2', b2)
     const today = new Date().toISOString().slice(0, 10)
     const doc = {
-      project: 'Apartamento Exemplo 302',
+      project: 'Sample Apartment 302',
       seq: { 1: 1, 4: 2 },
       sheets: [
-        { id: 's1', name: 'plantas-exemplo — p01', w: 2600, h: 1837 },
-        { id: 's2', name: 'plantas-exemplo — p02', w: 2600, h: 1837 },
+        { id: 's1', name: 'sample-plans — p01', w: 2600, h: 1837 },
+        { id: 's2', name: 'sample-plans — p02', w: 2600, h: 1837 },
       ],
       items: [
         { id: 'seed1', num: '1.1', layer: 1, firm: 'prefer', where: 'Living room, entry axis', see: 'The hallway door swings into the circulation path', want: 'Swing reversed or a pocket door', why: 'Arriving with grocery bags, the open door blocks the way to the kitchen', ref: '', status: 'agreed', created: today, statusDate: today, pin: { sheetId: 's1', x: 0.28, y: 0.42 } },
@@ -72,7 +74,7 @@ const seed = async page => {
 }
 
 const browser = await chromium.launch({ channel: 'chrome' })
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 })
+const ctx = await browser.newContext({ locale, viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 })
 const page = await ctx.newPage()
 await page.goto(BASE + '/?printdebug')
 await seed(page)

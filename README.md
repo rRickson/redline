@@ -53,13 +53,16 @@ or forgotten. Redline embeds a small, opinionated review method into a tool:
 
 - 📌 PDF plan upload → per-page sheet library, with pan/zoom pin placement
 - 🗂 Five-field notes filed under six cost-ordered layers, permanent numbering
-- 🏷 Dated statuses (Aberta / Combinada / Adiada / Recusada) and quick filters
+- 🏷 Dated statuses (Open / Agreed / Deferred / Rejected) and quick filters
 - 🖨 **Print / PDF**: a dedicated A4 document — the note list plus every plan
   sheet with its numbered callouts overlaid, the format architects read natively
 - 💾 **Local-first**: everything stays in your browser (IndexedDB). No server,
   no account, no telemetry. One-click JSON backup embeds the plan images
 - 📦 The production build is a single self-contained `dist/index.html`
   (React, pdf.js, and fonts embedded) that works offline from disk
+- 🌐 **English, Português (Brasil), 简体中文, 日本語** — picked from your
+  browser's language, switchable from the title block. The printed package
+  follows the chosen language
 
 ## Getting started
 
@@ -80,18 +83,18 @@ Open `dist/index.html` anywhere, even without internet.
 
 ## Usage
 
-1. **Enviar plantas (PDF)** — upload the architect's PDF; each page becomes a
+1. **Upload plans (PDF)** — upload the architect's PDF; each page becomes a
    sheet. Direct image upload works too.
-2. **Nova nota** — fill the five fields, pick the layer, and *marcar ponto na
-   planta* to pin it on the drawing.
-3. Track the conversation: mark notes **Combinada**, **Adiada**, or
-   **Recusada** as the architect responds — every change is dated.
-4. **Imprimir / PDF** — save the redline package and send it.
-5. **Salvar backup** regularly: your data lives only in this browser until
+2. **New note** — fill the five fields, pick the layer, and *mark the spot on
+   the plan* to pin it on the drawing.
+3. Track the conversation: mark notes **Agreed**, **Deferred**, or
+   **Rejected** as the architect responds — every change is dated.
+4. **Print / PDF** — save the redline package and send it.
+5. **Save backup** regularly: your data lives only in this browser until
    you export it. The backup JSON restores everything, plan images included.
 
-The UI is **pt-BR**. An i18n layer (English first) is a welcome
-contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
+Missing your language? Adding one is a single file — see
+[CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
 
 ## Project layout
 
@@ -103,6 +106,7 @@ contribution — see [CONTRIBUTING.md](CONTRIBUTING.md).
 | `src/storage.js` | IndexedDB persistence (localStorage fallback) |
 | `src/sheets.js` | PDF → sheet images (pdf.js, inline worker) |
 | `src/model.js` | Layers, firmness, statuses, doc shape |
+| `src/i18n/` | Translator, language detection, and one file per locale |
 | `src/fonts.js` | Self-hosted embedded fonts (Inter, Fragment Mono) |
 | `DESIGN.md` | The design system — authoritative for any UI change |
 | `scripts/capture.mjs` | Seeded screenshot capture for design review |

@@ -1,10 +1,13 @@
+import { useI18n } from '../i18n/index.js'
+
 export default function SheetShelf({ sheets, sheetUrls, items, onRename, onDelete, onView }) {
+  const { t } = useI18n()
   if (!sheets.length) return null
   return (
-    <section className="shelf" aria-label="Plantas do projeto">
+    <section className="shelf" aria-label={t('shelf.aria')}>
       <div className="shelf-head">
-        <h2 className="shelf-title">Plantas</h2>
-        <span className="shelf-hint">Clique numa planta para ver as marcações</span>
+        <h2 className="shelf-title">{t('shelf.title')}</h2>
+        <span className="shelf-hint">{t('shelf.hint')}</span>
       </div>
       <div className="shelf-row">
         {sheets.map(s => {
@@ -23,14 +26,14 @@ export default function SheetShelf({ sheets, sheetUrls, items, onRename, onDelet
                 className="s-name"
                 value={s.name}
                 onChange={e => onRename(s, e.target.value)}
-                aria-label="Nome da planta"
+                aria-label={t('shelf.nameAria')}
                 spellCheck={false}
               />
               {pinCount > 0 && <span className="s-pins">{pinCount}</span>}
               <button
                 className="s-del"
-                title="Remover planta"
-                aria-label={'Remover a planta ' + s.name}
+                title={t('shelf.remove')}
+                aria-label={t('shelf.removeAria', { name: s.name })}
                 onClick={() => onDelete(s)}
               >
                 <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">

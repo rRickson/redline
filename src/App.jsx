@@ -3,6 +3,7 @@ import { EMPTY_DOC, LAYERS, today, uid } from './model.js'
 import * as store from './storage.js'
 import { pdfToSheets, imageToSheet, blobToDataUrl, dataUrlToBlob } from './sheets.js'
 import { printRedline, buildPrintHtml } from './print.js'
+import { LOCALES, useI18n } from './i18n/index.js'
 import Editor from './components/Editor.jsx'
 import NoteCard from './components/NoteCard.jsx'
 import SheetShelf from './components/SheetShelf.jsx'
@@ -17,6 +18,7 @@ function PlusIcon() {
 }
 
 export default function App() {
+  const { t, lang, setLang } = useI18n()
   const [db, setDb] = useState(null)
   const [filter, setFilter] = useState('all')
   const [editing, setEditing] = useState(undefined) // undefined = closed, null = new, item = edit
@@ -38,7 +40,7 @@ export default function App() {
   // ---------- load ----------
   useEffect(() => {
     ;(async () => {
-      const doc = (await store.getDoc()) || EMPTY_DOC
+      const doc = (await store.getDoc()) || { ...EMPTY_DOC, project: t('defaultProject') }
       doc.sheets = doc.sheets || []
       doc.items = (doc.items || []).map(i => ({ pin: null, ...i }))
       const urls = {}
@@ -49,14 +51,14 @@ export default function App() {
       setSheetUrls(urls)
       setDb(doc)
       if (!(await store.storageHealthy())) {
-        showToast('Atenção: armazenamento do navegador limitado — mantenha backups JSON', 6000)
+        showToast(t('toast.storageLimited'), 6000)
       }
     })()
   }, [])
 
   function commit(next) {
     setDb(next)
-    store.setDoc(next).catch(() => showToast('Não foi possível salvar — exporte um backup!', 5000))
+    store.setDoc(next).catch(() => showToast(t('toast.saveFailed'), 5000))
   }
 
   // inspection hook: with ?printdebug, expose the print document's HTML
@@ -68,22 +70,22 @@ export default function App() {
         const b = await store.getBlob(s.id)
         if (b) urls[s.id] = await blobToDataUrl(b)
       }
-      return buildPrintHtml(db, urls)
+      return buildPrintHtml(db, urls, t, lang)
     }
-  }, [db])
+  }, [db, t, lang])
 
   if (!db) return null
 
   // ---------- notes ----------
   function saveNote(v, pin) {
     if (!v.where && !v.want) {
-      showToast('Preencha pelo menos o onde ou o que você quer')
+      showToast(t('toast.needWhereOrWant'))
       return
     }
     // The why is the framework's critical field: nudge once, never block.
     if (!v.why && !whyNudged.current) {
       whyNudged.current = true
-      showToast('Preencha o porquê — é o campo que traz uma resposta melhor', 4000)
+      showToast(t('toast.whyNudge'), 4000)
       document.getElementById('fWhy')?.focus()
       return
     }
@@ -92,7 +94,7 @@ export default function App() {
         i.id === editing.id ? { ...i, ...v, pin } : i,
       )
       commit({ ...db, items })
-      showToast('Nota ' + editing.num + ' atualizada')
+      showToast(t('toast.noteUpdated', { num: editing.num }))
     } else {
       const k = String(v.layer)
       const seq = { ...db.seq, [k]: (db.seq[k] || 0) + 1 }
@@ -107,7 +109,7 @@ export default function App() {
         statusDate: '',
       }
       commit({ ...db, seq, items: [...db.items, item] })
-      showToast('Nota ' + num + ' adicionada')
+      showToast(t('toast.noteAdded', { num }))
     }
     whyNudged.current = false
     setEditing(undefined)
@@ -123,9 +125,9 @@ export default function App() {
   }
 
   function deleteNote(item) {
-    if (!confirm('Excluir a nota ' + item.num + '? O número não será reutilizado.')) return
+    if (!confirm(t('confirm.deleteNote', { num: item.num }))) return
     commit({ ...db, items: db.items.filter(i => i.id !== item.id) })
-    showToast('Nota excluída')
+    showToast(t('toast.noteDeleted'))
   }
 
   // ---------- sheets ----------
@@ -139,13 +141,13 @@ export default function App() {
       for (const f of files) {
         if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) {
           const pages = await pdfToSheets(f, (p, n) =>
-            showToast(`Dividindo ${f.name} — página ${p}/${n}`, 10000),
+            showToast(t('toast.splitting', { name: f.name, p, n }), 10000),
           )
           made.push(...pages)
         } else if (f.type.startsWith('image/')) {
           made.push(await imageToSheet(f))
         } else {
-          showToast('Ignorado: ' + f.name + ' (não é PDF nem imagem)')
+          showToast(t('toast.skippedFile', { name: f.name }))
         }
       }
       const newSheets = []
@@ -159,17 +161,15 @@ export default function App() {
       setSheetUrls(prev => ({ ...prev, ...addedUrls }))
       setDb(prev => {
         const next = { ...prev, sheets: [...prev.sheets, ...newSheets] }
-        store.setDoc(next).catch(() => showToast('Não foi possível salvar — exporte um backup!', 5000))
+        store.setDoc(next).catch(() => showToast(t('toast.saveFailed'), 5000))
         return next
       })
       if (made.length) {
-        showToast(
-          made.length > 1 ? made.length + ' plantas adicionadas' : '1 planta adicionada',
-        )
+        showToast(t('toast.sheetsAdded', { n: made.length }))
       }
     } catch (err) {
       console.error(err)
-      showToast('Não foi possível ler esse arquivo', 4000)
+      showToast(t('toast.readFailed'), 4000)
     } finally {
       setBusy(false)
     }
@@ -184,10 +184,7 @@ export default function App() {
 
   function deleteSheet(sheet) {
     const pinned = db.items.filter(i => i.pin && i.pin.sheetId === sheet.id).length
-    const msg = pinned
-      ? `Remover "${sheet.name}"? ${pinned} marcaç${pinned > 1 ? 'ões' : 'ão'} de nota nela ser${pinned > 1 ? 'ão' : 'á'} removida${pinned > 1 ? 's' : ''}.`
-      : `Remover "${sheet.name}"?`
-    if (!confirm(msg)) return
+    if (!confirm(t('confirm.deleteSheet', { name: sheet.name, pinned }))) return
     store.deleteBlob(sheet.id)
     if (sheetUrls[sheet.id]) URL.revokeObjectURL(sheetUrls[sheet.id])
     setSheetUrls(({ [sheet.id]: _, ...rest }) => rest)
@@ -198,13 +195,13 @@ export default function App() {
         i.pin && i.pin.sheetId === sheet.id ? { ...i, pin: null } : i,
       ),
     })
-    showToast('Planta removida')
+    showToast(t('toast.sheetRemoved'))
   }
 
   // ---------- pin placer ----------
   function placeFromEditor(currentPin, cb) {
     setPlacer({
-      noteNum: editing ? editing.num : 'nova',
+      noteNum: editing ? editing.num : t('newPinLabel'),
       initial: currentPin,
       onDone: pin => {
         cb(pin)
@@ -223,7 +220,7 @@ export default function App() {
           items: db.items.map(i => (i.id === item.id ? { ...i, pin } : i)),
         })
         setPlacer(null)
-        showToast(pin ? 'Marcação movida' : 'Marcação removida')
+        showToast(t(pin ? 'toast.pinMoved' : 'toast.pinRemoved'))
       },
     })
   }
@@ -236,10 +233,10 @@ export default function App() {
   async function handlePrint() {
     setBusy(true)
     try {
-      await printRedline(db, store.getBlob)
+      await printRedline(db, store.getBlob, t, lang)
     } catch (err) {
       console.error(err)
-      showToast('Não foi possível gerar o documento de impressão', 4000)
+      showToast(t('toast.printFailed'), 4000)
     } finally {
       setBusy(false)
     }
@@ -261,7 +258,7 @@ export default function App() {
       a.download = 'redline-' + today() + '.json'
       a.click()
       URL.revokeObjectURL(a.href)
-      showToast('Backup salvo')
+      showToast(t('toast.backupSaved'))
     } finally {
       setBusy(false)
     }
@@ -291,10 +288,10 @@ export default function App() {
       }
       setSheetUrls(urls)
       commit(doc)
-      showToast('Backup carregado')
+      showToast(t('toast.backupLoaded'))
     } catch (err) {
       console.error(err)
-      showToast('Esse arquivo não é um backup do Redline', 4000)
+      showToast(t('toast.notABackup'), 4000)
     } finally {
       setBusy(false)
     }
@@ -318,46 +315,54 @@ export default function App() {
               id="projectName"
               type="text"
               value={db.project}
-              aria-label="Nome do projeto"
+              aria-label={t('title.projectName')}
               spellCheck={false}
               onChange={e => commit({ ...db, project: e.target.value })}
             />
-            <p className="tb-sub">Notas de revisão para o arquiteto</p>
+            <p className="tb-sub">{t('title.subtitle')}</p>
           </div>
           <div className="tb-meta">
             <b>{today()}</b>
-            {db.items.length
-              ? `${db.items.length} nota${db.items.length > 1 ? 's' : ''}`
-              : 'nenhuma nota ainda'}
+            {t('title.noteCount', { n: db.items.length })}
+            <select
+              className="lang-select"
+              value={lang}
+              aria-label={t('languageLabel')}
+              onChange={e => setLang(e.target.value)}
+            >
+              {Object.entries(LOCALES).map(([code, m]) => (
+                <option key={code} value={code}>{m.langName}</option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="tb-stats">
-          <div className="stat must"><b>{count(i => i.firm === 'must')}</b><span>Obrigatórias</span></div>
-          <div className="stat"><b>{count(i => i.firm === 'prefer')}</b><span>Preferências</span></div>
-          <div className="stat"><b>{count(i => i.firm === 'question')}</b><span>Perguntas</span></div>
-          <div className="stat"><b>{count(i => i.status === 'open')}</b><span>Abertas</span></div>
-          <div className="stat agreed"><b>{count(i => i.status === 'agreed')}</b><span>Combinadas</span></div>
+          <div className="stat must"><b>{count(i => i.firm === 'must')}</b><span>{t('stats.must')}</span></div>
+          <div className="stat"><b>{count(i => i.firm === 'prefer')}</b><span>{t('stats.prefer')}</span></div>
+          <div className="stat"><b>{count(i => i.firm === 'question')}</b><span>{t('stats.question')}</span></div>
+          <div className="stat"><b>{count(i => i.status === 'open')}</b><span>{t('stats.open')}</span></div>
+          <div className="stat agreed"><b>{count(i => i.status === 'agreed')}</b><span>{t('stats.agreed')}</span></div>
         </div>
       </header>
 
       <div className="toolbar">
         <button className="btn btn-primary" onClick={() => setEditing(null)}>
-          <PlusIcon /> Nova nota
+          <PlusIcon /> {t('toolbar.newNote')}
         </button>
         <button className="btn" disabled={busy} onClick={() => fileRef.current.click()}>
           {busy ? (
-            'Processando…'
+            t('toolbar.busy')
           ) : (
             <>
-              <PlusIcon /> Enviar plantas (PDF)
+              <PlusIcon /> {t('toolbar.upload')}
             </>
           )}
         </button>
         <div className="spacer" />
-        <button className="btn" disabled={busy} onClick={handlePrint}>Imprimir / PDF</button>
-        <button className="btn" disabled={busy} onClick={exportBackup}>Salvar backup</button>
+        <button className="btn" disabled={busy} onClick={handlePrint}>{t('toolbar.print')}</button>
+        <button className="btn" disabled={busy} onClick={exportBackup}>{t('toolbar.saveBackup')}</button>
         <button className="btn" disabled={busy} onClick={() => backupRef.current.click()}>
-          Carregar backup
+          {t('toolbar.loadBackup')}
         </button>
       </div>
 
@@ -371,20 +376,14 @@ export default function App() {
       />
 
       <div className="filters">
-        {[
-          ['all', 'Todas'],
-          ['open', 'Abertas'],
-          ['must', 'Obrigatórias'],
-          ['agreed', 'Combinadas'],
-          ['deferred', 'Adiadas'],
-        ].map(([f, label]) => (
+        {['all', 'open', 'must', 'agreed', 'deferred'].map(f => (
           <button
             key={f}
             className="chip"
             aria-pressed={filter === f}
             onClick={() => setFilter(f)}
           >
-            {label}
+            {t('filters.' + f)}
           </button>
         ))}
       </div>
@@ -405,28 +404,24 @@ export default function App() {
       <main>
         {!db.items.length ? (
           <div className="empty">
-            <h2>Nada marcado ainda</h2>
-            <p>
-              Envie as plantas do arquiteto e percorra uma cena do dia a dia —
-              manhã de semana, chegando com as compras, dia de lavar roupa — e
-              marque a primeira coisa que travar. Essa é a sua nota 1.1.
-            </p>
+            <h2>{t('empty.title')}</h2>
+            <p>{t('empty.body')}</p>
           </div>
         ) : !shown.length ? (
           <div className="empty">
-            <h2>Nenhuma nota neste filtro</h2>
-            <p>Volte para Todas para ver o resto da lista.</p>
+            <h2>{t('empty.filterTitle')}</h2>
+            <p>{t('empty.filterBody')}</p>
           </div>
         ) : (
-          LAYERS.map(L => {
-            const its = shown.filter(i => i.layer === L.n)
+          LAYERS.map(n => {
+            const its = shown.filter(i => i.layer === n)
             if (!its.length) return null
             return (
-              <section className="layer" key={L.n}>
+              <section className="layer" key={n}>
                 <div className="layer-head">
-                  <span className="layer-num">{L.n}</span>
-                  <h2 className="layer-title">{L.t}</h2>
-                  <span className="layer-lock">{L.lock}</span>
+                  <span className="layer-num">{n}</span>
+                  <h2 className="layer-title">{t(`layers.${n}.title`)}</h2>
+                  <span className="layer-lock">{t(`layers.${n}.lock`)}</span>
                 </div>
                 <div className="layer-items">
                   {its.map(i => (
@@ -448,7 +443,7 @@ export default function App() {
         )}
       </main>
 
-      <p className="foot">A numeração é permanente — a nota 2.3 será sempre a 2.3</p>
+      <p className="foot">{t('foot')}</p>
 
       {toast && (
         <div className="toast" role="status">{toast}</div>

@@ -1,0 +1,151 @@
+// 日本語. A note is “コメント”, counted with 件; polite です・ます for messages.
+export default {
+  langName: '日本語',
+  languageLabel: '言語',
+  docTitle: 'Redline — 設計レビュー',
+  defaultProject: 'わが家',
+  newPinLabel: '新規',
+
+  layers: {
+    1: { title: '構造・動線', lock: '解体開始で確定' },
+    2: { title: '水回り', lock: '給排水工事で確定' },
+    3: { title: '収納・造作家具', lock: '造作家具の発注で確定' },
+    4: { title: '電気・照明', lock: '電気配線工事で確定' },
+    5: { title: '仕上げ・設備機器', lock: '資材の発注で確定' },
+    6: { title: '家具レイアウト', lock: '入居まで変更可' },
+  },
+  firm: { must: '必須', prefer: '希望', question: '質問' },
+  status: { open: '未解決', agreed: '合意', deferred: '保留', rejected: '却下' },
+  statusAction: { agreed: '合意', deferred: '保留', rejected: '却下' },
+
+  title: {
+    projectName: 'プロジェクト名',
+    subtitle: '建築家へのレビューコメント',
+    noteCount: ({ n }) => (n ? `コメント ${n} 件` : 'コメントはまだありません'),
+  },
+  stats: { must: '必須', prefer: '希望', question: '質問', open: '未解決', agreed: '合意済み' },
+  toolbar: {
+    newNote: '新規コメント',
+    upload: '図面をアップロード（PDF）',
+    busy: '処理中…',
+    print: '印刷 / PDF',
+    saveBackup: 'バックアップを保存',
+    loadBackup: 'バックアップを読み込む',
+  },
+  filters: { all: 'すべて', open: '未解決', must: '必須', agreed: '合意済み', deferred: '保留中' },
+  empty: {
+    title: 'まだ何も記録されていません',
+    body:
+      '建築家の図面をアップロードして、日常の場面を思い浮かべてみましょう — 平日の朝、' +
+      '買い物袋を持って帰宅したとき、洗濯の日。最初に引っかかった点を記録してください。' +
+      'それがコメント 1.1 です。',
+    filterTitle: 'このフィルターに該当するコメントはありません',
+    filterBody: '「すべて」に戻ると一覧全体が表示されます。',
+  },
+  foot: '番号は変わりません — コメント 2.3 はずっと 2.3 です',
+
+  toast: {
+    storageLimited: '注意：ブラウザのストレージが制限されています — JSON バックアップを保存してください',
+    saveFailed: '保存できませんでした — バックアップを書き出してください！',
+    needWhereOrWant: '少なくとも「場所」か「希望」を入力してください',
+    whyNudge: '「理由」を入力してください — より良い回答につながる項目です',
+    noteUpdated: 'コメント {num} を更新しました',
+    noteAdded: 'コメント {num} を追加しました',
+    noteDeleted: 'コメントを削除しました',
+    splitting: '{name} を分割中 — {p}/{n} ページ',
+    skippedFile: 'スキップ：{name}（PDF でも画像でもありません）',
+    sheetsAdded: '図面を {n} 枚追加しました',
+    readFailed: 'このファイルを読み込めませんでした',
+    sheetRemoved: '図面を削除しました',
+    pinMoved: 'マーカーを移動しました',
+    pinRemoved: 'マーカーを削除しました',
+    printFailed: '印刷用ドキュメントを作成できませんでした',
+    backupSaved: 'バックアップを保存しました',
+    backupLoaded: 'バックアップを読み込みました',
+    notABackup: 'このファイルは Redline のバックアップではありません',
+  },
+  confirm: {
+    deleteNote: 'コメント {num} を削除しますか？この番号は再利用されません。',
+    deleteSheet: ({ name, pinned }) =>
+      pinned
+        ? `「${name}」を削除しますか？この図面上のマーカー ${pinned} 件も削除されます。`
+        : `「${name}」を削除しますか？`,
+  },
+
+  editor: {
+    aria: 'コメント編集',
+    editing: 'コメント {num} を編集中',
+    layer: 'レイヤー',
+    layerHint: '— 緊急度を決めます',
+    firm: 'こだわりの強さ',
+    firmOption: {
+      must: '必須 — 譲れない',
+      prefer: '希望 — 代替案も可',
+      question: '質問 — 確認したいだけ',
+    },
+    where: '場所',
+    whereHint: '— 図面・部屋・壁',
+    wherePlaceholder: '図面 02 — キッチン、北側の壁',
+    pin: '図面上のマーカー',
+    pinHint: '— 図面上の正確な位置を示します',
+    pinnedOn: '{name} に配置済み',
+    move: '移動',
+    remove: '削除',
+    pinAttach: '図面に位置を指定',
+    pinNoSheets: '建築家の図面をアップロードすると（上のボタン）、コメントを図面上に配置できます。',
+    see: '現状',
+    seePlaceholder: 'カウンター付近にコンセントが 1 つしかない',
+    want: '希望',
+    wantPlaceholder: '少なくとも 3 つ、カウンター沿いに分散して',
+    why: '理由',
+    whyHint: '— より良い回答につながる項目',
+    whyPlaceholder: '朝は電気ケトル、ミキサー、ノンフライヤーを同時に使う',
+    ref: '参考リンク',
+    refHint: '— 任意、見た目に関わるものに',
+    save: 'コメントを保存',
+    cancel: 'キャンセル',
+  },
+
+  note: {
+    noPlace: '場所未設定',
+    see: '現状',
+    want: '希望',
+    why: '理由',
+    ref: '参考',
+    createdOn: '{date} 作成',
+    statusOn: '{date} {status}',
+    thumbTitle: '{name} に配置 — クリックで表示・移動',
+    edit: '編集',
+    delete: '削除',
+  },
+
+  placer: {
+    sheet: '図面',
+    title: 'コメント {num} を図面に配置',
+    hintBrowse: 'ドラッグで移動 · スクロールでズーム',
+    hintPlace: 'クリックで配置 · ドラッグで移動 · スクロールでズーム',
+    zoomIn: '拡大',
+    zoomOut: '縮小',
+    close: '閉じる',
+    removePin: 'マーカーを削除',
+    cancel: 'キャンセル',
+    use: 'この位置にする',
+  },
+
+  shelf: {
+    aria: 'プロジェクトの図面',
+    title: '図面',
+    hint: '図面をクリックするとマーカーを表示します',
+    nameAria: '図面名',
+    remove: '図面を削除',
+    removeAria: '図面 {name} を削除',
+  },
+
+  print: {
+    docTitle: '{project} — レビューコメント',
+    openCount: '未解決 {n} 件',
+    legend: ({ b }) => `各コメント：現状 · 希望 · ${b('理由')}`,
+    legendNumbers: '番号は変わらず、図面上のマーカーと対応しています',
+    sheetSub: 'コメント {n} 件 — 番号は一覧と対応',
+  },
+}

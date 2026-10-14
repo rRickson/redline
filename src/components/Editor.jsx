@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { LAYERS } from '../model.js'
+import { FIRMS, LAYERS } from '../model.js'
+import { useI18n } from '../i18n/index.js'
 
 function PinIcon({ filled }) {
   return (
@@ -18,6 +19,7 @@ export default function Editor({
   onCancel,
   onPlacePin, // (currentPin, cb) => void — opens the placer, cb receives new pin
 }) {
+  const { t } = useI18n()
   const [v, setV] = useState(init(editing))
   const [pin, setPin] = useState(editing?.pin || null)
   const whereRef = useRef(null)
@@ -43,47 +45,43 @@ export default function Editor({
   const pinSheet = pin ? sheets.find(s => s.id === pin.sheetId) : null
 
   return (
-    <section className="editor" aria-label="Editor de notas">
+    <section className="editor" aria-label={t('editor.aria')}>
       <div className="ed-head">
-        {editing ? (
-          <>
-            Editando a nota<span className="num">{editing.num}</span>
-          </>
-        ) : (
-          'Nova nota'
-        )}
+        {editing
+          ? t('editor.editing', { num: <span className="num">{editing.num}</span> })
+          : t('toolbar.newNote')}
       </div>
 
       <div className="grid2">
         <div className="field">
           <label htmlFor="fLayer">
-            Camada <span className="hint">— define a urgência</span>
+            {t('editor.layer')} <span className="hint">{t('editor.layerHint')}</span>
           </label>
           <select id="fLayer" value={v.layer} onChange={e => setV(s => ({ ...s, layer: +e.target.value }))}>
-            {LAYERS.map(L => (
-              <option key={L.n} value={L.n}>{L.n} — {L.t}</option>
+            {LAYERS.map(n => (
+              <option key={n} value={n}>{n} — {t(`layers.${n}.title`)}</option>
             ))}
           </select>
         </div>
         <div className="field">
-          <label htmlFor="fFirm">Quanto eu faço questão</label>
+          <label htmlFor="fFirm">{t('editor.firm')}</label>
           <select id="fFirm" value={v.firm} onChange={set('firm')}>
-            <option value="must">Obrigatório — não abro mão</option>
-            <option value="prefer">Prefiro — aberto a alternativas</option>
-            <option value="question">Pergunta — só perguntando</option>
+            {FIRMS.map(f => (
+              <option key={f} value={f}>{t('editor.firmOption.' + f)}</option>
+            ))}
           </select>
         </div>
       </div>
 
       <div className="field">
         <label htmlFor="fWhere">
-          Onde <span className="hint">— prancha, cômodo, parede</span>
+          {t('editor.where')} <span className="hint">{t('editor.whereHint')}</span>
         </label>
         <input
           id="fWhere"
           ref={whereRef}
           type="text"
-          placeholder="Planta 02 — cozinha, parede norte"
+          placeholder={t('editor.wherePlaceholder')}
           value={v.where}
           onChange={set('where')}
         />
@@ -91,23 +89,22 @@ export default function Editor({
 
       <div className="field">
         <label>
-          Marcação na planta{' '}
-          <span className="hint">— marque o ponto exato no desenho</span>
+          {t('editor.pin')} <span className="hint">{t('editor.pinHint')}</span>
         </label>
         <div className="pin-row">
           {pinSheet ? (
             <span className="pin-attached">
               <PinIcon filled />
-              Marcada em {pinSheet.name}
+              {t('editor.pinnedOn', { name: pinSheet.name })}
               <button
                 type="button"
                 className="mini"
                 onClick={() => onPlacePin(pin, setPin)}
               >
-                Mover
+                {t('editor.move')}
               </button>
               <button type="button" className="mini del" onClick={() => setPin(null)}>
-                Remover
+                {t('editor.remove')}
               </button>
             </span>
           ) : sheets.length ? (
@@ -117,31 +114,31 @@ export default function Editor({
               onClick={() => onPlacePin(pin, setPin)}
             >
               <PinIcon />
-              Marcar ponto na planta
+              {t('editor.pinAttach')}
             </button>
           ) : (
             <span className="hint" style={{ fontSize: 12.5 }}>
-              Envie as plantas do arquiteto (botão acima) para marcar as notas nelas.
+              {t('editor.pinNoSheets')}
             </span>
           )}
         </div>
       </div>
 
       <div className="field">
-        <label htmlFor="fSee">O que eu vejo hoje</label>
+        <label htmlFor="fSee">{t('editor.see')}</label>
         <textarea
           id="fSee"
-          placeholder="Só uma tomada perto da bancada"
+          placeholder={t('editor.seePlaceholder')}
           value={v.see}
           onChange={set('see')}
         />
       </div>
 
       <div className="field">
-        <label htmlFor="fWant">O que eu quero no lugar</label>
+        <label htmlFor="fWant">{t('editor.want')}</label>
         <textarea
           id="fWant"
-          placeholder="Pelo menos três, distribuídas pela bancada"
+          placeholder={t('editor.wantPlaceholder')}
           value={v.want}
           onChange={set('want')}
         />
@@ -149,11 +146,11 @@ export default function Editor({
 
       <div className="field why-field">
         <label htmlFor="fWhy">
-          Por quê <span className="hint">— o campo que traz uma resposta melhor</span>
+          {t('editor.why')} <span className="hint">{t('editor.whyHint')}</span>
         </label>
         <textarea
           id="fWhy"
-          placeholder="Chaleira, liquidificador e air fryer ligados ao mesmo tempo de manhã"
+          placeholder={t('editor.whyPlaceholder')}
           value={v.why}
           onChange={set('why')}
         />
@@ -161,7 +158,7 @@ export default function Editor({
 
       <div className="field">
         <label htmlFor="fRef">
-          Link de referência <span className="hint">— opcional, para qualquer coisa visual</span>
+          {t('editor.ref')} <span className="hint">{t('editor.refHint')}</span>
         </label>
         <input id="fRef" type="text" placeholder="https://…" value={v.ref} onChange={set('ref')} />
       </div>
@@ -181,9 +178,9 @@ export default function Editor({
             onSave(trimmed, pin)
           }}
         >
-          Salvar nota
+          {t('editor.save')}
         </button>
-        <button className="btn-ghost" onClick={onCancel}>Cancelar</button>
+        <button className="btn-ghost" onClick={onCancel}>{t('editor.cancel')}</button>
       </div>
     </section>
   )

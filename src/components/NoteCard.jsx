@@ -1,7 +1,8 @@
-import { FIRM, STAT } from '../model.js'
+import { useI18n } from '../i18n/index.js'
 
 // CSS-cropped thumbnail: shows the region of the sheet around the pin.
 function PinThumb({ note, sheet, url, onClick }) {
+  const { t } = useI18n()
   const BOX_W = 132
   const BOX_H = 99
   const ZOOM = 4 // background is ZOOM× the box width
@@ -14,7 +15,7 @@ function PinThumb({ note, sheet, url, onClick }) {
       type="button"
       className="n-thumb"
       onClick={onClick}
-      title={`Marcada em ${sheet.name} — clique para ver ou mover`}
+      title={t('note.thumbTitle', { name: sheet.name })}
     >
       <span
         className="t-bg"
@@ -39,31 +40,32 @@ export default function NoteCard({
   onDelete,
   onOpenPin,
 }) {
+  const { t } = useI18n()
   const i = note
   const sheet = i.pin ? sheets.find(s => s.id === i.pin.sheetId) : null
   return (
     <article className={'note s-' + i.status}>
       <div className="pin">{i.num}</div>
       <div className="n-top">
-        <span className="n-where">{i.where || 'Local não definido'}</span>
-        <span className={'tag t-' + i.firm}>{FIRM[i.firm]}</span>
-        <span className={'tag t-' + i.status}>{STAT[i.status]}</span>
+        <span className="n-where">{i.where || t('note.noPlace')}</span>
+        <span className={'tag t-' + i.firm}>{t('firm.' + i.firm)}</span>
+        <span className={'tag t-' + i.status}>{t('status.' + i.status)}</span>
       </div>
       <div className="n-body">
         <div className="n-fields">
           <dl>
             {i.see && (
-              <div className="line"><dt>Vejo</dt><dd>{i.see}</dd></div>
+              <div className="line"><dt>{t('note.see')}</dt><dd>{i.see}</dd></div>
             )}
             {i.want && (
-              <div className="line"><dt>Quero</dt><dd>{i.want}</dd></div>
+              <div className="line"><dt>{t('note.want')}</dt><dd>{i.want}</dd></div>
             )}
             {i.why && (
-              <div className="line why"><dt>Porque</dt><dd>{i.why}</dd></div>
+              <div className="line why"><dt>{t('note.why')}</dt><dd>{i.why}</dd></div>
             )}
             {i.ref && (
               <div className="line">
-                <dt>Ref</dt>
+                <dt>{t('note.ref')}</dt>
                 <dd>
                   <a className="ref" href={i.ref} target="_blank" rel="noopener noreferrer">
                     {i.ref}
@@ -85,32 +87,35 @@ export default function NoteCard({
       <div className="n-foot">
         <span className="n-date">
           {i.status === 'open'
-            ? 'Criada em ' + i.created
-            : STAT[i.status] + ' em ' + (i.statusDate || i.created)}
+            ? t('note.createdOn', { date: i.created })
+            : t('note.statusOn', {
+                status: t('status.' + i.status),
+                date: i.statusDate || i.created,
+              })}
         </span>
         <button
           className="mini on-agreed"
           aria-pressed={i.status === 'agreed'}
           onClick={() => onStatus(i, 'agreed')}
         >
-          Combinar
+          {t('statusAction.agreed')}
         </button>
         <button
           className="mini on-deferred"
           aria-pressed={i.status === 'deferred'}
           onClick={() => onStatus(i, 'deferred')}
         >
-          Adiar
+          {t('statusAction.deferred')}
         </button>
         <button
           className="mini on-rejected"
           aria-pressed={i.status === 'rejected'}
           onClick={() => onStatus(i, 'rejected')}
         >
-          Recusar
+          {t('statusAction.rejected')}
         </button>
-        <button className="mini" onClick={() => onEdit(i)}>Editar</button>
-        <button className="mini del" onClick={() => onDelete(i)}>Excluir</button>
+        <button className="mini" onClick={() => onEdit(i)}>{t('note.edit')}</button>
+        <button className="mini del" onClick={() => onDelete(i)}>{t('note.delete')}</button>
       </div>
     </article>
   )

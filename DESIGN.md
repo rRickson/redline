@@ -189,7 +189,7 @@ A restrained ink-on-paper neutral ramp with three semantic hues, each carrying a
 
 ## Typography
 
-**UI/Body Font:** Inter (variable 400–700, latin subset, self-hosted and embedded; falls back to -apple-system, Segoe UI, sans-serif)
+**UI/Body Font:** Inter (variable 400–700, latin subset, self-hosted and embedded; falls back to -apple-system, Segoe UI, sans-serif). Chinese and Japanese text falls through to each script's native system font via `:lang(zh)` / `:lang(ja)` stacks (PingFang SC / Microsoft YaHei; Hiragino Sans / Yu Gothic) — CJK fonts are never embedded
 **Figure Font:** Fragment Mono (latin subset, self-hosted; falls back to ui-monospace, Menlo)
 
 **Character:** A modern workhorse sans doing all the talking, tightened slightly at display sizes (-0.01 to -0.022em), with a typewriter-precise mono reserved for the document's numbers. The contrast between the two is the page's texture.
